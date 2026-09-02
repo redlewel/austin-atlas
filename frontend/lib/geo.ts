@@ -1,16 +1,22 @@
-/** WGS84 bounds for the Austin base map (top-left / bottom-right). */
-export const AUSTIN_BOUNDS = {
-  north: dmsToDeg(30, 30, 17.26),
-  west: -dmsToDeg(97, 49, 31.78),
-  south: dmsToDeg(30, 7, 43.92),
-  east: -dmsToDeg(97, 38, 36.68),
-} as const;
-
 export type LatLon = { lat: number; lon: number };
 
-export function dmsToDeg(degrees: number, minutes: number, seconds: number) {
-  return degrees + minutes / 60 + seconds / 3600;
-}
+export type GeoBounds = {
+  north: number;
+  west: number;
+  south: number;
+  east: number;
+};
+
+/** Scene origin — downtown Austin. +X east, +Y up, −Z north. */
+export const AUSTIN_ORIGIN: LatLon = { lat: 30.2672, lon: -97.7431 };
+
+/** Approximate metro extent — must match water data bbox. */
+export const AUSTIN_BOUNDS: GeoBounds = {
+  north: 30.35,
+  west: -97.8,
+  south: 30.2,
+  east: -97.65,
+};
 
 function metersPerDegree(latDeg: number) {
   const lat = (latDeg * Math.PI) / 180;
@@ -23,45 +29,41 @@ function metersPerDegree(latDeg: number) {
   };
 }
 
-const originLat = (AUSTIN_BOUNDS.north + AUSTIN_BOUNDS.south) / 2;
-const originLon = (AUSTIN_BOUNDS.east + AUSTIN_BOUNDS.west) / 2;
-const meters = metersPerDegree(originLat);
+const meters = metersPerDegree(AUSTIN_ORIGIN.lat);
 
-/** Native pixels of the base-map screenshot. Do not stretch this. */
-export const MAP_IMAGE = { width: 1024, height: 934 } as const;
-
-/** East–west meters implied by the given longitudes. */
-export const AUSTIN_WIDTH_M =
-  Math.abs(AUSTIN_BOUNDS.east - AUSTIN_BOUNDS.west) * meters.lon;
-
-/**
- * Ground plane size matching the screenshot aspect (1024×934).
- * Height follows the image so the texture is not stretched; the given
- * latitudes describe a taller box than this photo, so they are not used
- * for plane height.
- */
-export const MAP_PLANE_WIDTH_M = AUSTIN_WIDTH_M;
-export const MAP_PLANE_HEIGHT_M =
-  AUSTIN_WIDTH_M * (MAP_IMAGE.height / MAP_IMAGE.width);
-
-/**
- * Local world meters: +X east, +Y up, −Z north, origin at the bounds center.
- */
-export function latLonToWorld(lat: number, lon: number): {
-  x: number;
-  y: number;
-  z: number;
-} {
+export function latLonToWorld(lat: number, lon: number) {
   return {
-    x: (lon - originLon) * meters.lon,
+    x: (lon - AUSTIN_ORIGIN.lon) * meters.lon,
     y: 0,
-    z: (originLat - lat) * meters.lat,
+    z: (AUSTIN_ORIGIN.lat - lat) * meters.lat,
   };
 }
 
 export function worldToLatLon(x: number, z: number): LatLon {
   return {
-    lon: originLon + x / meters.lon,
-    lat: originLat - z / meters.lat,
+    lon: AUSTIN_ORIGIN.lon + x / meters.lon,
+    lat: AUSTIN_ORIGIN.lat - z / meters.lat,
   };
 }
+
+export function planeSizeFromBounds(bounds: GeoBounds) {
+  return {
+    widthM: Math.abs(bounds.east - bounds.west) * meters.lon,
+    heightM: Math.abs(bounds.north - bounds.south) * meters.lat,
+  };
+}
+
+/** Place a plane so its edges match the bounds corners, with slight padding. */
+export function groundPlacementFromBounds(bounds: GeoBounds, paddingM = 600) {
+  const nw = latLonToWorld(bounds.north, bounds.west);
+  const se = latLonToWorld(bounds.south, bounds.east);
+
+  return {
+    widthM: se.x - nw.x + paddingM * 2,
+    heightM: se.z - nw.z + paddingM * 2,
+    centerX: (nw.x + se.x) / 2,
+    centerZ: (nw.z + se.z) / 2,
+  };
+}
+
+export const GROUND_PLANE = groundPlacementFromBounds(AUSTIN_BOUNDS);
