@@ -2,15 +2,22 @@ import * as THREE from "three";
 import { latLonToWorld } from "@/lib/geo";
 import type { TechPin } from "@/lib/tech-pins";
 
-function createMarkerMesh(color: string) {
+export const BUILDING_BASE_Y = 0.5;
+const BOX_SIZE_M = 40 * 5;
+
+function createMarkerMesh(color: string, label: string) {
   const material = new THREE.MeshStandardMaterial({
     color,
     roughness: 0.45,
     metalness: 0.1,
   });
 
-  const box = new THREE.Mesh(new THREE.BoxGeometry(40, 40, 40), material);
-  box.position.y = 20;
+  const box = new THREE.Mesh(
+    new THREE.BoxGeometry(BOX_SIZE_M, BOX_SIZE_M, BOX_SIZE_M),
+    material,
+  );
+  box.position.y = BUILDING_BASE_Y + BOX_SIZE_M / 2;
+  box.userData.label = label;
   return box;
 }
 
@@ -20,9 +27,8 @@ export function buildTechPinMeshes(pins: TechPin[]) {
 
   for (const pin of pins) {
     const { x, z } = latLonToWorld(pin.lat, pin.lon);
-    const marker = createMarkerMesh(pin.color);
-    marker.position.set(x, 0, z);
-    marker.userData.name = pin.name;
+    const marker = createMarkerMesh(pin.color, pin.name);
+    marker.position.set(x, marker.position.y, z);
     marker.userData.address = pin.address;
     group.add(marker);
   }
