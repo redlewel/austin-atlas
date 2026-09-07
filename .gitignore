@@ -4,3 +4,6 @@ node_modules/
 next-env.d.ts
 .env*
 .DS_Store
+
+# Raw CoA downloads — regenerate via npm run fetch-buildings
+frontend/public/data/buildings/*.geojson

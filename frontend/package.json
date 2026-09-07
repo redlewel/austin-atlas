@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "fetch-water": "node scripts/fetch-water.mjs"
+    "fetch-water": "node scripts/fetch-water.mjs",
+    "fetch-buildings": "node scripts/fetch-buildings.mjs",
+    "fetch-basemap": "node scripts/fetch-basemap.mjs"
   },
   "dependencies": {
     "next": "16.3.4",
