@@ -10,12 +10,12 @@ export type GeoBounds = {
 /** Scene origin — downtown Austin. +X east, +Y up, −Z north. */
 export const AUSTIN_ORIGIN: LatLon = { lat: 30.2672, lon: -97.7431 };
 
-/** Approximate metro extent — must match water data bbox. */
+/** Metro extent — downtown, Domain, Tesla SE, AMD/Intel west. */
 export const AUSTIN_BOUNDS: GeoBounds = {
-  north: 30.35,
-  west: -97.8,
+  north: 30.44,
+  west: -97.88,
   south: 30.2,
-  east: -97.65,
+  east: -97.6,
 };
 
 function metersPerDegree(latDeg: number) {
